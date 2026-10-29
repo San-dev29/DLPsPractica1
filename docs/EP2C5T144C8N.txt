@@ -1,0 +1,3 @@
+EP2C5T144C8N
+D2, D4, D5 (LEDs) Pines 3,7,9 Active Low
+Push button Pin 144 pull-up active low

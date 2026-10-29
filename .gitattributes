@@ -1,0 +1,18 @@
+# Normalizacion de finales de linea
+* text=auto
+
+*.vhd  text
+*.qsf  text
+*.qpf  text
+*.sdc  text
+*.md   text
+*.ps1  text
+*.txt  text
+
+# Archivos binarios
+*.sof  binary
+*.pof  binary
+*.wlf  binary
+*.bmp  binary
+*.png  binary
+*.jpg  binary

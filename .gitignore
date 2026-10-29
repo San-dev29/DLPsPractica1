@@ -1,0 +1,86 @@
+# ============================================================
+#  Archivos generados por Quartus II / ModelSim
+#  No se versionan: se regeneran al compilar o simular.
+# ============================================================
+
+# --- Carpetas de compilacion de Quartus ---
+db/
+incremental_db/
+output_files/
+simulation/
+greybox_tmp/
+hps_isw_handoff/
+
+# --- Estado de la sesion / respaldos ---
+*.qws
+*.qws.bak
+*.qpf.bak
+*.qsf.bak
+*.qdf
+*.bak
+*.orig
+
+# --- Reportes y resumenes ---
+*.rpt
+*.summary
+*.smsg
+*.qmsg
+*.jdi
+*.done
+
+# --- Archivos de programacion (bitstreams) ---
+*.sof
+*.pof
+*.sopcinfo
+*.ttf
+*.rbf
+*.hex
+*.mif
+
+# --- Bases de datos internas de Quartus ---
+*.tdb
+*.ddb
+*.cdb
+*.hdb
+*.rdb
+*.logdb
+*.ammdb
+*.kpt
+*.bpm
+*.ipinfo
+*.db_info
+*.sci
+*.hif
+*.tiw
+*.vpr
+*.rtlv
+*.sgdiff
+
+# --- ModelSim / Questa ---
+work/
+work_*/
+modelsim.ini
+transcript
+transcript.*
+*.wlf
+*.vstf
+*.wdb
+*.mpf
+*.cr.mti
+vsim.wlf
+_primary.dat
+*.mti
+
+# --- Editores y sistema operativo ---
+.vscode/
+.idea/
+*.swp
+*~
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# --- Temporal ---
+*.tmp
+*.temp
+*.log
