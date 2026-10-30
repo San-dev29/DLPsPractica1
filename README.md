@@ -62,7 +62,7 @@ DLPsPractica1/
 
 | Punto | Carpeta | Descripción | Estado |
 |---|---|---|---|
-| 5 | [`punto5_ruleta`](punto5_ruleta/README.md) | Ruleta de 8 resultados en display de 7 segmentos | ✅ Implementado |
+| 5 | [`punto5_ruleta`](punto5_ruleta/README.md) | Ruleta de 8 resultados + prueba de DIP switches, barras de LEDs y 4 pulsadores | ✅ Implementado |
 
 ## Equipo
 

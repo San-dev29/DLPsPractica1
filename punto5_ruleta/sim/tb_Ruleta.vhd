@@ -19,6 +19,16 @@ architecture sim of tb_Ruleta is
     signal led_n : std_logic_vector(2 downto 0);
     signal fin   : boolean := false;
 
+    -- Entradas/salidas del modulo de prueba de componentes (sin usar aqui)
+    signal dip1  : std_logic_vector(7 downto 0) := (others => '0');
+    signal dip2  : std_logic_vector(7 downto 0) := (others => '0');
+    signal btn1  : std_logic := '0';
+    signal btn2  : std_logic := '0';
+    signal btn3  : std_logic := '0';
+    signal btn4  : std_logic := '0';
+    signal bar1  : std_logic_vector(7 downto 0);
+    signal bar2  : std_logic_vector(7 downto 0);
+
     -- Traduce el codigo de segmentos (A..G) al numero mostrado.
     -- Devuelve -1 si el codigo no corresponde a un digito valido.
     function seg_a_numero (v : std_logic_vector(6 downto 0)) return integer is
@@ -51,7 +61,15 @@ begin
             clk   => clk,
             btn_n => btn_n,
             seg   => seg,
-            led_n => led_n
+            led_n => led_n,
+            dip1  => dip1,
+            dip2  => dip2,
+            btn1  => btn1,
+            btn2  => btn2,
+            btn3  => btn3,
+            btn4  => btn4,
+            bar1  => bar1,
+            bar2  => bar2
         );
 
     proceso_pruebas : process

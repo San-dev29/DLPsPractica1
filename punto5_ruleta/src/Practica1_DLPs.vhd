@@ -1,101 +1,80 @@
 library ieee;
 use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
 
--- Practica 1: Ruleta electronica de 8 resultados (1..8)
+-- Practica 1: nivel superior
 --
--- Funcionamiento:
---   * En reposo el display muestra el ultimo valor obtenido.
---   * Una pulsacion del boton arranca el giro: los numeros 1..8 se
---     muestran de forma continua a 20 Hz.
---   * Una segunda pulsacion detiene la ruleta y el display queda fijo
---     en el numero obtenido.
+-- Instancia de forma modular:
+--   * ruleta             -> punto 5 (display de 7 segmentos y 3 LEDs)
+--   * prueba_componentes -> DIP switches, barras de LEDs y 4 pulsadores
+--
+-- El reset de encendido (~1 ms) se genera aqui y se distribuye a los
+-- dos modulos.
 entity Practica1_DLPs is
     generic (
-        CLK_HZ  : integer := 50_000_000;  -- Reloj de la placa (PIN_17)
-        DB_MS   : integer := 20;          -- Tiempo de antirrebote [ms]
-        SPIN_HZ : integer := 20           -- Velocidad de giro [Hz]
+        CLK_HZ   : integer := 50_000_000;  -- Reloj de la placa (PIN_17)
+        DB_MS    : integer := 20;          -- Tiempo de antirrebote [ms]
+        SPIN_HZ  : integer := 20;          -- Velocidad de giro de la ruleta [Hz]
+        BLINK_HZ : integer := 2            -- Frecuencia de parpadeo de las barras [Hz]
     );
     port (
         clk   : in  std_logic;
-        btn_n : in  std_logic;                          -- Pulsador, activo bajo
+        btn_n : in  std_logic;                          -- Pulsador de la ruleta, activo bajo (pull-up)
         seg   : out std_logic_vector(6 downto 0);       -- Segmentos A..G
-        led_n : out std_logic_vector(2 downto 0)        -- LEDs D2, D4, D5 (activo bajo)
+        led_n : out std_logic_vector(2 downto 0);       -- LEDs D2, D4, D5 (activo bajo)
+
+        dip1  : in  std_logic_vector(7 downto 0);       -- DIP switch 1
+        dip2  : in  std_logic_vector(7 downto 0);       -- DIP switch 2
+        btn1  : in  std_logic;                          -- Pulsadores de prueba de componentes
+        btn2  : in  std_logic;
+        btn3  : in  std_logic;
+        btn4  : in  std_logic;
+        bar1  : out std_logic_vector(7 downto 0);       -- Barra de LEDs 1
+        bar2  : out std_logic_vector(7 downto 0)        -- Barra de LEDs 2
     );
 end Practica1_DLPs;
 
 architecture rtl of Practica1_DLPs is
 
-    component div_frecuencia is
+    component ruleta is
         generic (
             CLK_HZ  : integer := 50_000_000;
+            DB_MS   : integer := 20;
             SPIN_HZ : integer := 20
         );
         port (
-            clk       : in  std_logic;
-            tick_ms   : out std_logic;
-            tick_giro : out std_logic
+            clk   : in  std_logic;
+            rst   : in  std_logic;
+            btn_n : in  std_logic;
+            seg   : out std_logic_vector(6 downto 0);
+            led_n : out std_logic_vector(2 downto 0)
         );
     end component;
 
-    component antirrebote is
+    component prueba_componentes is
         generic (
-            N_MS : integer := 20
+            CLK_HZ   : integer := 50_000_000;
+            DB_MS    : integer := 20;
+            BLINK_HZ : integer := 2
         );
-        port (
-            clk     : in  std_logic;
-            tick_ms : in  std_logic;
-            btn_n   : in  std_logic;
-            pulso   : out std_logic
-        );
-    end component;
-
-    component control_ruleta is
-        port (
-            clk     : in  std_logic;
-            rst     : in  std_logic;
-            pulso   : in  std_logic;
-            running : out std_logic
-        );
-    end component;
-
-    component lfsr8 is
         port (
             clk  : in  std_logic;
-            tick : in  std_logic;
-            load : in  std_logic;
-            seed : in  std_logic_vector(7 downto 0);
-            q    : out std_logic_vector(7 downto 0)
-        );
-    end component;
-
-    component BinSieteseg is
-        port (
-            A : in  std_logic_vector(3 downto 0);
-            s : in  std_logic;
-            d : out std_logic_vector(7 downto 0)
+            rst  : in  std_logic;
+            dip1 : in  std_logic_vector(7 downto 0);
+            dip2 : in  std_logic_vector(7 downto 0);
+            btn1 : in  std_logic;
+            btn2 : in  std_logic;
+            btn3 : in  std_logic;
+            btn4 : in  std_logic;
+            bar1 : out std_logic_vector(7 downto 0);
+            bar2 : out std_logic_vector(7 downto 0)
         );
     end component;
 
     -- Reset interno de encendido (~1 ms)
     constant POR_CYCLES : integer := CLK_HZ / 1000;
 
-    signal rst       : std_logic := '1';
-    signal por_cnt   : integer range 0 to POR_CYCLES := 0;
-    signal libre     : unsigned(23 downto 0) := (others => '0');
-
-    signal tick_ms   : std_logic;
-    signal tick_giro : std_logic;
-    signal tick_act  : std_logic;
-
-    signal pulso     : std_logic;
-    signal running   : std_logic;
-    signal arranque  : std_logic;
-
-    signal q_lfsr    : std_logic_vector(7 downto 0);
-    signal seed      : std_logic_vector(7 downto 0);
-    signal valor     : std_logic_vector(3 downto 0);
-    signal seg_full  : std_logic_vector(7 downto 0);
+    signal rst     : std_logic := '1';
+    signal por_cnt : integer range 0 to POR_CYCLES := 0;
 
 begin
 
@@ -112,75 +91,39 @@ begin
         end if;
     end process;
 
-    -- Contador libre de 50 MHz: fuente de semilla aleatoria
-    process (clk)
-    begin
-        if rising_edge(clk) then
-            libre <= libre + 1;
-        end if;
-    end process;
-
-    seed <= std_logic_vector(libre(15 downto 8));
-
-    -- Solo se avanza el LFSR mientras la ruleta gira
-    tick_act <= tick_giro and running;
-
-    -- Un pulso del boton con la ruleta detenida produce un arranque
-    arranque <= pulso and (not running);
-
-    -- Numero visible: 1..8 en 4 bits (0 -> 1 ... 7 -> 8)
-    valor <= std_logic_vector(unsigned('0' & q_lfsr(2 downto 0)) + 1);
-
-    -- LEDs: espejo binario invertido (activos en bajo).
-    -- Nota: al ser solo 3 LEDs, el valor 8 se muestra como "000".
-    led_n <= not valor(2 downto 0);
-
-    seg <= seg_full(6 downto 0);  -- DP no se utiliza (conflicto con LED D2)
-
-    u_div : div_frecuencia
+    -- Punto 5: ruleta de 8 resultados
+    u_ruleta : ruleta
         generic map (
             CLK_HZ  => CLK_HZ,
+            DB_MS   => DB_MS,
             SPIN_HZ => SPIN_HZ
         )
         port map (
-            clk       => clk,
-            tick_ms   => tick_ms,
-            tick_giro => tick_giro
+            clk   => clk,
+            rst   => rst,
+            btn_n => btn_n,
+            seg   => seg,
+            led_n => led_n
         );
 
-    u_db : antirrebote
+    -- Prueba de componentes: DIP switches, barras de LEDs y pulsadores
+    u_componentes : prueba_componentes
         generic map (
-            N_MS => DB_MS
+            CLK_HZ   => CLK_HZ,
+            DB_MS    => DB_MS,
+            BLINK_HZ => BLINK_HZ
         )
         port map (
-            clk     => clk,
-            tick_ms => tick_ms,
-            btn_n   => btn_n,
-            pulso   => pulso
-        );
-
-    u_ctrl : control_ruleta
-        port map (
-            clk     => clk,
-            rst     => rst,
-            pulso   => pulso,
-            running => running
-        );
-
-    u_lfsr : lfsr8
-        port map (
             clk  => clk,
-            tick => tick_act,
-            load => arranque,
-            seed => seed,
-            q    => q_lfsr
-        );
-
-    u_dec : BinSieteseg
-        port map (
-            A => valor,
-            s => '0',  -- Segmentos activo alto
-            d => seg_full
+            rst  => rst,
+            dip1 => dip1,
+            dip2 => dip2,
+            btn1 => btn1,
+            btn2 => btn2,
+            btn3 => btn3,
+            btn4 => btn4,
+            bar1 => bar1,
+            bar2 => bar2
         );
 
 end rtl;
