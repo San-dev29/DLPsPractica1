@@ -11,10 +11,9 @@ use ieee.std_logic_1164.all;
 -- dos modulos.
 entity Practica1_DLPs is
     generic (
-        CLK_HZ   : integer := 50_000_000;  -- Reloj de la placa (PIN_17)
-        DB_MS    : integer := 20;          -- Tiempo de antirrebote [ms]
-        SPIN_HZ  : integer := 20;          -- Velocidad de giro de la ruleta [Hz]
-        BLINK_HZ : integer := 2            -- Frecuencia de parpadeo de las barras [Hz]
+        CLK_HZ  : integer := 50_000_000;  -- Reloj de la placa (PIN_17)
+        DB_MS   : integer := 20;          -- Tiempo de antirrebote [ms]
+        SPIN_HZ : integer := 20           -- Velocidad de giro de la ruleta [Hz]
     );
     port (
         clk   : in  std_logic;
@@ -23,7 +22,6 @@ entity Practica1_DLPs is
         led_n : out std_logic_vector(2 downto 0);       -- LEDs D2, D4, D5 (activo bajo)
 
         dip1  : in  std_logic_vector(7 downto 0);       -- DIP switch 1
-        dip2  : in  std_logic_vector(7 downto 0);       -- DIP switch 2
         btn1  : in  std_logic;                          -- Pulsadores de prueba de componentes
         btn2  : in  std_logic;
         btn3  : in  std_logic;
@@ -51,16 +49,9 @@ architecture rtl of Practica1_DLPs is
     end component;
 
     component prueba_componentes is
-        generic (
-            CLK_HZ   : integer := 50_000_000;
-            DB_MS    : integer := 20;
-            BLINK_HZ : integer := 2
-        );
         port (
             clk  : in  std_logic;
-            rst  : in  std_logic;
             dip1 : in  std_logic_vector(7 downto 0);
-            dip2 : in  std_logic_vector(7 downto 0);
             btn1 : in  std_logic;
             btn2 : in  std_logic;
             btn3 : in  std_logic;
@@ -106,18 +97,11 @@ begin
             led_n => led_n
         );
 
-    -- Prueba de componentes: DIP switches, barras de LEDs y pulsadores
+    -- Prueba de componentes: DIP switch 1, barras de LEDs y pulsadores
     u_componentes : prueba_componentes
-        generic map (
-            CLK_HZ   => CLK_HZ,
-            DB_MS    => DB_MS,
-            BLINK_HZ => BLINK_HZ
-        )
         port map (
             clk  => clk,
-            rst  => rst,
             dip1 => dip1,
-            dip2 => dip2,
             btn1 => btn1,
             btn2 => btn2,
             btn3 => btn3,

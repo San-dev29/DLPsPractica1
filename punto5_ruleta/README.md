@@ -4,8 +4,8 @@ Circuito en VHDL con dos bloques independientes que comparten el reloj y el rese
 
 1. **Ruleta** de ocho resultados (1 a 8) en un display de 7 segmentos. El mismo
    pulsador inicia y detiene el giro.
-2. **Prueba de componentes**: dos DIP switches, dos barras de 8 LEDs y cuatro
-   pulsadores que seleccionan distintos modos de visualización.
+2. **Prueba de componentes**: el DIP switch 1 conectado a la barra de LEDs 1 y
+   cuatro pulsadores conectados a cuatro LEDs de la barra 2.
 
 El nivel superior `Practica1_DLPs` solo genera el reset de encendido e instancia
 ambos módulos.
@@ -52,44 +52,41 @@ Dispositivo: **Cyclone II EP2C5T144C8N** (Quartus II 13.0 SP1).
 | `bar1[6]` | 141 | Salida | Activo alto |
 | `bar1[7]` | 143 | Salida | Activo alto |
 
-### DIP switch 2 y barra de LEDs 2
+### Pulsadores y barra de LEDs 2
 
 | Señal | Pin | Tipo | Polaridad |
 |---|---|---|---|
-| `dip2[0]` | 72 | Entrada | Activo alto |
-| `dip2[1]` | 70 | Entrada | Activo alto |
-| `dip2[2]` | 67 | Entrada | Activo alto |
-| `dip2[3]` | 64 | Entrada | Activo alto |
-| `dip2[4]` | 60 | Entrada | Activo alto |
-| `dip2[5]` | 58 | Entrada | Activo alto |
-| `dip2[6]` | 55 | Entrada | Activo alto |
-| `dip2[7]` | 52 | Entrada | Activo alto |
-| `bar2[0]` | 71 | Salida | Activo alto |
-| `bar2[1]` | 69 | Salida | Activo alto |
-| `bar2[2]` | 65 | Salida | Activo alto |
-| `bar2[3]` | 63 | Salida | Activo alto |
-| `bar2[4]` | 59 | Salida | Activo alto |
-| `bar2[5]` | 57 | Salida | Activo alto |
-| `bar2[6]` | 53 | Salida | Activo alto |
-| `bar2[7]` | 51 | Salida | Activo alto |
-
-### Pulsadores de prueba de componentes
-
-| Señal | Pin | Tipo | Polaridad |
-|---|---|---|---|
-| `btn1` | 81 | Entrada | Activo alto (pull-down) |
-| `btn2` | 88 | Entrada | Activo alto (pull-down) |
-| `btn3` | 89 | Entrada | Activo alto (pull-down) |
-| `btn4` | 90 | Entrada | Activo alto (pull-down) |
+| `btn1` | 74 | Entrada | Activo alto (pull-down) |
+| `btn2` | 75 | Entrada | Activo alto (pull-down) |
+| `btn3` | 100 | Entrada | Activo alto (pull-down) |
+| `btn4` | 97 | Entrada | Activo alto (pull-down) |
+| `bar2[0]` | 71 | Salida | LED de `btn1`, activo alto |
+| `bar2[1]` | 69 | Salida | LED de `btn2`, activo alto |
+| `bar2[2]` | 65 | Salida | LED de `btn3`, activo alto |
+| `bar2[3]` | 63 | Salida | LED de `btn4`, activo alto |
+| `bar2[4]` | 59 | Salida | Apagado |
+| `bar2[5]` | 57 | Salida | Apagado |
+| `bar2[6]` | 53 | Salida | Apagado |
+| `bar2[7]` | 51 | Salida | Apagado |
 
 Notas:
+- **Pin 73 DEFECTUOSO: no usar.** Aun sin nada conectado entrega 3.3 V (queda fijo
+  en alto), por lo que se descartó como entrada. `btn3` se movió al pin 100 y
+  `btn4` al 97.
+- El DIP switch 2 se retiró del diseño: la placa de ese DIP switch está defectuosa
+  (no la FPGA). Sus pines (52–72) ya no se usan.
+- **Funciones especiales de pines**: los pines 74 y 75 son entradas de reloj/PLL y
+  el pin 76 es `LVDS41p/nCEO`. Los 74/75 funcionan como I/O normal (confirmar en
+  la placa); el 76 se liberó con
+  `CYCLONEII_RESERVE_NCEO_AFTER_CONFIGURATION = USE AS REGULAR IO` aunque ya no se
+  usa en el diseño actual.
 - El punto decimal (DP) del display no se usa: su pin habitual (3) está ocupado
   por el LED D2.
 - Los LEDs D2/D4/D5 muestran el número de la ruleta en binario invertido. Al ser
   solo 3 LEDs, el valor **8 se representa como `000`**.
 - `RESERVE_ALL_UNUSED_PINS = AS INPUT TRI-STATED` para no forzar niveles en pines libres.
-- La polaridad de DIP switches y pulsadores se puede invertir con las constantes
-  `DIP_ACTIVO_BAJO` y `BTN_ACTIVO_BAJO` de `prueba_componentes.vhd`.
+- La polaridad del DIP switch y de los pulsadores se puede invertir con las
+  constantes `DIP_ACTIVO_BAJO` y `BTN_ACTIVO_BAJO` de `prueba_componentes.vhd`.
 
 ## 2. Arquitectura
 
@@ -102,9 +99,8 @@ Notas:
                     │        └────────────────────────────────────► BinSieteseg ─► seg      │
                     │                                                     └─► led_n        │
                     │                                                                     │
- dip1, dip2 ────────┼──► u_componentes : prueba_componentes                             │
- btn1..btn4 ────────┼──►   4 x antirrebote ─► registro de modo ─► mux ─► bar1, bar2       │
-                    │       div_frecuencia (tick 1 ms y parpadeo)                         │
+ dip1 ──────────────┼──► u_componentes : prueba_componentes                             │
+ btn1..btn4 ────────┼──►   sincronizadores ─► bar1 = dip1, bar2(3..0) = btn4..btn1        │
                     └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -112,14 +108,14 @@ Notas:
 |---|---|
 | `Practica1_DLPs.vhd` | Top: reset de encendido e instancias de los dos módulos |
 | `ruleta.vhd` | Módulo de la ruleta (divisor, antirrebote, control, LFSR y decodificador) |
-| `prueba_componentes.vhd` | Modos de prueba con DIP switches, barras de LEDs y 4 pulsadores |
-| `div_frecuencia.vhd` | Ticks de 1 kHz (antirrebote) y de giro/parpadeo |
+| `prueba_componentes.vhd` | Conexión fija DIP switch 1 → barra 1 y pulsadores → barra 2 |
+| `div_frecuencia.vhd` | Ticks de 1 kHz (antirrebote) y de giro |
 | `antirrebote.vhd` | Sincronizador de 2 FF + validación de 20 ms |
 | `control_ruleta.vhd` | Biestable T: conmuta RUN/STOP con cada pulsación |
 | `lfsr8.vhd` | LFSR Galois `x⁸+x⁶+x⁵+x⁴+1` (0xB8), periodo 255 |
 | `BinSieteseg.vhd` | Decodificador binario → 7 segmentos |
 | `sim/tb_Ruleta.vhd` | Testbench de la ruleta (5 pruebas) |
-| `sim/tb_Componentes.vhd` | Testbench de DIP switches, barras y pulsadores (6 pruebas) |
+| `sim/tb_Componentes.vhd` | Testbench de DIP switch, barras y pulsadores (5 pruebas) |
 | `Practica1_DLPs.sdc` | Restricción de reloj de 50 MHz |
 
 ### Funcionamiento de la ruleta
@@ -131,18 +127,14 @@ Notas:
 
 ### Funcionamiento de la prueba de componentes
 
-El modo se selecciona con un pulsador y **queda memorizado** (no hay que mantenerlo
-presionado). Tras el reset el modo es 0 (barras apagadas).
+Conexión fija, sin modos:
 
-| Pulsador | Modo | Comportamiento |
-|---|---|---|
-| `btn1` | 1 | `bar1 = dip1` y `bar2 = dip2` (conexión directa) |
-| `btn2` | 2 | Las dos barras parpadean a 2 Hz |
-| `btn3` | 3 | Las dos barras permanecen encendidas |
-| `btn4` | 4 | Igual que el modo 1 pero intercambiando entradas: `bar1 = dip2`, `bar2 = dip1` |
+- `bar1 = dip1`: la barra 1 replica los 8 interruptores del DIP switch 1.
+- `bar2(0) = btn1`, `bar2(1) = btn2`, `bar2(2) = btn3`, `bar2(3) = btn4`.
+- `bar2(7..4) = 0`: los cuatro LEDs altos de la barra 2 quedan apagados.
 
-Los cuatro pulsadores pasan por su propio antirrebote de 20 ms. Si se presionan
-varios a la vez, la prioridad es `btn1 > btn2 > btn3 > btn4`.
+Los pulsadores se sincronizan con dos biestables. Como el LED refleja directamente
+el nivel del pulsador, los rebotes solo producen un parpadeo momentáneo.
 
 ## 3. Resultados de simulación (ModelSim)
 
@@ -160,20 +152,19 @@ varios a la vez, la prioridad es `btn1 > btn2 > btn3 > btn4`.
 
 | Prueba | Descripción | Resultado |
 |---|---|---|
-| T1 | Modo inicial 0 | OK — barras apagadas |
-| T2 | `btn1`: conexión directa | OK — la barra sigue los DIP switches en vivo |
-| T3 | `btn2`: parpadeo | OK — 3 transiciones en 700 ms a 2 Hz |
-| T4 | `btn3`: encendidas siempre | OK — `0xFF` estable durante 200 ms |
-| T5 | `btn4`: entradas intercambiadas | OK — `bar1 = dip2`, `bar2 = dip1` |
-| T6 | Antirrebote de los pulsadores de modo | OK — los rebotes no cambian el modo |
+| T1 | Conexión fija `dip1` → `bar1` y `bar2` apagada | OK |
+| T2 | `bar1` sigue los cambios del DIP switch en vivo | OK |
+| T3 | Cada pulsador enciende su LED (`bar2(0..3)`) | OK |
+| T4 | Pulsaciones simultáneas se combinan | OK — `0x05` y `0x0A` |
+| T5 | `bar2(7..4)` permanece apagado | OK |
 
 ## 4. Resultados de síntesis
 
 ```
-Total logic elements : 252 / 4,608 ( 5 % )
-Total registers      : 137
-Total pins           : 48 / 89 ( 54 % )
-Worst-case setup slack : 13.135 ns   (positivo)
+Total logic elements : 140 / 4,608 ( 3 % )
+Total registers      : 89
+Total pins           : 40 / 89 ( 45 % )
+Worst-case setup slack : 13.449 ns   (positivo)
 Worst-case hold slack  :  0.499 ns   (positivo)
 Full Compilation     : 0 errors
 ```
@@ -219,4 +210,4 @@ vsim -c -do "run -all; quit -f" tb_Ruleta
 ```
 
 Para simular más rápido, los testbenches usan `CLK_HZ = 10_000`, manteniendo los
-tiempos reales de antirrebote (20 ms), de giro (20 Hz) y de parpadeo (2 Hz).
+tiempos reales de antirrebote (20 ms) y de giro (20 Hz).

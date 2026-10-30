@@ -35,7 +35,6 @@
 #
 # -------------------------------------------------------------------------- #
 
-
 set_global_assignment -name FAMILY "Cyclone II"
 set_global_assignment -name DEVICE EP2C5T144C8
 set_global_assignment -name TOP_LEVEL_ENTITY Practica1_DLPs
@@ -96,16 +95,6 @@ set_location_assignment PIN_137 -to bar1[5]
 set_location_assignment PIN_141 -to bar1[6]
 set_location_assignment PIN_143 -to bar1[7]
 
-# DIP switch 2 (activo alto)
-set_location_assignment PIN_72 -to dip2[0]
-set_location_assignment PIN_70 -to dip2[1]
-set_location_assignment PIN_67 -to dip2[2]
-set_location_assignment PIN_64 -to dip2[3]
-set_location_assignment PIN_60 -to dip2[4]
-set_location_assignment PIN_58 -to dip2[5]
-set_location_assignment PIN_55 -to dip2[6]
-set_location_assignment PIN_52 -to dip2[7]
-
 # Barra de LEDs 2 (activo alto)
 set_location_assignment PIN_71 -to bar2[0]
 set_location_assignment PIN_69 -to bar2[1]
@@ -116,11 +105,15 @@ set_location_assignment PIN_57 -to bar2[5]
 set_location_assignment PIN_53 -to bar2[6]
 set_location_assignment PIN_51 -to bar2[7]
 
+# El pin 76 es LVDS41p/nCEO (doble proposito). Se deja liberado como I/O
+# normal por si se vuelve a usar; sin esto el fitter lo reserva como nCEO.
+set_global_assignment -name CYCLONEII_RESERVE_NCEO_AFTER_CONFIGURATION "USE AS REGULAR IO"
+
 # Pulsadores de prueba de componentes (activo alto, pull-down)
-set_location_assignment PIN_81 -to btn1
-set_location_assignment PIN_88 -to btn2
-set_location_assignment PIN_89 -to btn3
-set_location_assignment PIN_90 -to btn4
+set_location_assignment PIN_74 -to btn1
+set_location_assignment PIN_75 -to btn2
+set_location_assignment PIN_100 -to btn3
+set_location_assignment PIN_97 -to btn4
 set_global_assignment -name RESERVE_ALL_UNUSED_PINS "AS INPUT TRI-STATED"
 
 set_global_assignment -name RESERVE_ALL_UNUSED_PINS_NO_OUTPUT_GND "AS INPUT TRI-STATED"

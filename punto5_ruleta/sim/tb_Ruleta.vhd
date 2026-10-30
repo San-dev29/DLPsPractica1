@@ -21,7 +21,6 @@ architecture sim of tb_Ruleta is
 
     -- Entradas/salidas del modulo de prueba de componentes (sin usar aqui)
     signal dip1  : std_logic_vector(7 downto 0) := (others => '0');
-    signal dip2  : std_logic_vector(7 downto 0) := (others => '0');
     signal btn1  : std_logic := '0';
     signal btn2  : std_logic := '0';
     signal btn3  : std_logic := '0';
@@ -63,7 +62,6 @@ begin
             seg   => seg,
             led_n => led_n,
             dip1  => dip1,
-            dip2  => dip2,
             btn1  => btn1,
             btn2  => btn2,
             btn3  => btn3,

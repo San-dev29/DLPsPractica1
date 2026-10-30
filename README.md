@@ -10,6 +10,7 @@ varios módulos en paralelo sin interferencias.
 
 ```
 DLPsPractica1/
+├── AGENTS.md                  # Reglas: no commitear sin autorización, revisar pines
 ├── docs/                      # Documentación y especificaciones de hardware
 │   ├── EP2C5T144C8N.txt
 │   └── especificacion_hardware.md
@@ -62,7 +63,7 @@ DLPsPractica1/
 
 | Punto | Carpeta | Descripción | Estado |
 |---|---|---|---|
-| 5 | [`punto5_ruleta`](punto5_ruleta/README.md) | Ruleta de 8 resultados + prueba de DIP switches, barras de LEDs y 4 pulsadores | ✅ Implementado |
+| 5 | [`punto5_ruleta`](punto5_ruleta/README.md) | Ruleta de 8 resultados + prueba de componentes (DIP switch 1, barras de LEDs y 4 pulsadores) | ✅ Implementado |
 
 ## Equipo
 
