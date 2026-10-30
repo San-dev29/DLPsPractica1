@@ -11,13 +11,13 @@ Dispositivo: **Cyclone II EP2C5T144C8N** (Quartus II 13.0 SP1).
 |---|---|---|---|
 | `clk` | 17 | Entrada | Oscilador 50 MHz |
 | `btn_n` | 144 | Entrada | Pulsador con pull-up, **activo bajo** |
-| `seg[0]` = A | 40 | Salida | Segmento, activo alto |
-| `seg[1]` = B | 42 | Salida | Segmento, activo alto |
-| `seg[2]` = C | 44 | Salida | Segmento, activo alto |
-| `seg[3]` = D | 47 | Salida | Segmento, activo alto |
-| `seg[4]` = E | 51 | Salida | Segmento, activo alto |
-| `seg[5]` = F | 53 | Salida | Segmento, activo alto |
-| `seg[6]` = G | 57 | Salida | Segmento, activo alto |
+| `seg[0]` = A | 96 | Salida | Segmento, activo alto |
+| `seg[1]` = B | 94 | Salida | Segmento, activo alto |
+| `seg[2]` = C | 93 | Salida | Segmento, activo alto |
+| `seg[3]` = D | 92 | Salida | Segmento, activo alto |
+| `seg[4]` = E | 87 | Salida | Segmento, activo alto |
+| `seg[5]` = F | 86 | Salida | Segmento, activo alto |
+| `seg[6]` = G | 79 | Salida | Segmento, activo alto |
 | `led_n[2]` | 3 | Salida | LED D2, **activo bajo** |
 | `led_n[1]` | 7 | Salida | LED D4, **activo bajo** |
 | `led_n[0]` | 9 | Salida | LED D5, **activo bajo** |
