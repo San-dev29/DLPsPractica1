@@ -20,6 +20,7 @@ architecture sim of tb_Componentes is
     signal clk   : std_logic := '0';
     signal btn_n : std_logic := '1';               -- Ruleta sin usar
     signal seg   : std_logic_vector(6 downto 0);
+    signal dig   : std_logic_vector(3 downto 0);
     signal led_n : std_logic_vector(2 downto 0);
 
     signal dip1 : std_logic_vector(7 downto 0) := (others => '0');
@@ -38,14 +39,16 @@ begin
 
     dut : entity work.Practica1_DLPs
         generic map (
-            CLK_HZ  => CLK_HZ,
-            DB_MS   => 20,
-            SPIN_HZ => 20
+            CLK_HZ   => CLK_HZ,
+            DB_MS    => 20,
+            SPIN_HZ  => 20,
+            DIGIT_HZ => 1000
         )
         port map (
             clk   => clk,
             btn_n => btn_n,
             seg   => seg,
+            dig   => dig,
             led_n => led_n,
             dip1  => dip1,
             btn1  => btn1,

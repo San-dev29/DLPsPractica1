@@ -38,6 +38,24 @@ $fuentes = @(Get-ChildItem -Path (Join-Path $dir "src") -Filter *.vhd | Sort-Obj
 $bancos  = @(Get-ChildItem -Path (Join-Path $dir "sim") -Filter *.vhd | Sort-Object Name)
 if ($fuentes.Count -eq 0) { Write-Error "No hay archivos VHDL en $dir\src" }
 
+# Fuentes externas declaradas en el .qsf del modulo (por ejemplo, los modulos
+# de otro punto que se instancian desde el nivel superior).
+$externas = @()
+$qsf = @(Get-ChildItem -Path $dir -Filter *.qsf -File)
+if ($qsf.Count -gt 0) {
+    $patron = '^\s*set_global_assignment\s+-name\s+VHDL_FILE\s+"?([^"]+)"?\s*$'
+    foreach ($linea in Get-Content -Path $qsf[0].FullName) {
+        if ($linea -match $patron) {
+            $ruta = $Matches[1].Trim()
+            if (-not [System.IO.Path]::IsPathRooted($ruta)) {
+                $ruta = Join-Path $dir $ruta
+            }
+            $ruta = [System.IO.Path]::GetFullPath($ruta)
+            if (Test-Path $ruta) { $externas += (Get-Item $ruta) }
+        }
+    }
+}
+
 if (-not $Top) {
     if ($bancos.Count -gt 0) {
         $Top = [System.IO.Path]::GetFileNameWithoutExtension($bancos[0].Name)
@@ -51,7 +69,11 @@ Push-Location $dir
 try {
     if (-not (Test-Path "work")) { & $vlib work | Out-Null }
 
-    $archivos = @($fuentes + $bancos | ForEach-Object { $_.FullName })
+    $vistos  = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    $archivos = @()
+    foreach ($f in @($externas + $fuentes + $bancos)) {
+        if ($vistos.Add($f.FullName)) { $archivos += $f.FullName }
+    }
     & $vcom -93 @archivos
     if ($LASTEXITCODE -ne 0) { Write-Error "Error al compilar con vcom." }
 

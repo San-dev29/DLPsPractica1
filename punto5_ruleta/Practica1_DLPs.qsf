@@ -51,8 +51,11 @@ set_global_assignment -name VHDL_FILE src/antirrebote.vhd
 set_global_assignment -name VHDL_FILE src/control_ruleta.vhd
 set_global_assignment -name VHDL_FILE src/lfsr8.vhd
 set_global_assignment -name VHDL_FILE src/BinSieteseg.vhd
+set_global_assignment -name VHDL_FILE src/display_mux.vhd
 set_global_assignment -name VHDL_FILE src/ruleta.vhd
-set_global_assignment -name VHDL_FILE src/prueba_componentes.vhd
+set_global_assignment -name VHDL_FILE ../punto2_registro_desplazamiento/src/debounce_btn.vhd
+set_global_assignment -name VHDL_FILE ../punto2_registro_desplazamiento/src/registro_desplazamiento.vhd
+set_global_assignment -name VHDL_FILE ../punto2_registro_desplazamiento/src/Punto2_Registro.vhd
 set_global_assignment -name SDC_FILE Practica1_DLPs.sdc
 set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "3.3-V LVTTL"
 
@@ -70,22 +73,23 @@ set_location_assignment PIN_87 -to seg[4]
 set_location_assignment PIN_86 -to seg[5]
 set_location_assignment PIN_79 -to seg[6]
 
+# Seleccion de digitos del display multiplexado (activo alto)
+# dig(0)=digito 3 (ruleta), dig(1)=digito 4 (A), dig(2)=digito 5 (B), dig(3)=digito 6 (C)
+set_location_assignment PIN_113 -to dig[0]
+set_location_assignment PIN_115 -to dig[1]
+set_location_assignment PIN_114 -to dig[2]
+set_location_assignment PIN_112 -to dig[3]
+
 # LEDs D2, D4, D5 (activo bajo)
 set_location_assignment PIN_3 -to led_n[2]
 set_location_assignment PIN_7 -to led_n[1]
 set_location_assignment PIN_9 -to led_n[0]
 
-# DIP switch 1 (activo alto)
+# DIP switch 1 (activo alto): bit 0 = dato serie, bit 1 = enable
 set_location_assignment PIN_120 -to dip1[0]
 set_location_assignment PIN_122 -to dip1[1]
-set_location_assignment PIN_126 -to dip1[2]
-set_location_assignment PIN_132 -to dip1[3]
-set_location_assignment PIN_134 -to dip1[4]
-set_location_assignment PIN_136 -to dip1[5]
-set_location_assignment PIN_139 -to dip1[6]
-set_location_assignment PIN_142 -to dip1[7]
 
-# Barra de LEDs 1 (activo alto)
+# Barra de LEDs 1 (activo alto): etapas q(7..0) del registro
 set_location_assignment PIN_121 -to bar1[0]
 set_location_assignment PIN_125 -to bar1[1]
 set_location_assignment PIN_129 -to bar1[2]
@@ -95,23 +99,12 @@ set_location_assignment PIN_137 -to bar1[5]
 set_location_assignment PIN_141 -to bar1[6]
 set_location_assignment PIN_143 -to bar1[7]
 
-# Barra de LEDs 2 (activo alto)
-set_location_assignment PIN_71 -to bar2[0]
-set_location_assignment PIN_69 -to bar2[1]
-set_location_assignment PIN_65 -to bar2[2]
-set_location_assignment PIN_63 -to bar2[3]
-set_location_assignment PIN_59 -to bar2[4]
-set_location_assignment PIN_57 -to bar2[5]
-set_location_assignment PIN_53 -to bar2[6]
-set_location_assignment PIN_51 -to bar2[7]
-
 # El pin 76 es LVDS41p/nCEO (doble proposito). Se deja liberado como I/O
 # normal por si se vuelve a usar; sin esto el fitter lo reserva como nCEO.
 set_global_assignment -name CYCLONEII_RESERVE_NCEO_AFTER_CONFIGURATION "USE AS REGULAR IO"
 
-# Pulsadores de prueba de componentes (activo alto, pull-down)
-set_location_assignment PIN_74 -to btn1
-set_location_assignment PIN_75 -to btn2
+# Pulsadores del punto 2 (activo alto, pull-down)
+# btn 3 = reloj del registro, btn 4 = reset del registro
 set_location_assignment PIN_100 -to btn3
 set_location_assignment PIN_97 -to btn4
 set_global_assignment -name RESERVE_ALL_UNUSED_PINS "AS INPUT TRI-STATED"
@@ -120,5 +113,6 @@ set_global_assignment -name RESERVE_ALL_UNUSED_PINS_NO_OUTPUT_GND "AS INPUT TRI-
 set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+
 
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

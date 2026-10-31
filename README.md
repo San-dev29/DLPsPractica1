@@ -14,11 +14,19 @@ DLPsPractica1/
 ├── docs/                      # Documentación y especificaciones de hardware
 │   ├── EP2C5T144C8N.txt
 │   └── especificacion_hardware.md
-├── punto5_ruleta/             # Punto 5: ruleta de 8 resultados
-│   ├── src/                   # Código VHDL sintetizable
-│   ├── sim/                   # Testbenches
+├── punto2_registro_desplazamiento/  # Punto 2: registro de desplazamiento de 8 bits
+│   ├── src/                   # Se instancia desde punto5_ruleta
+│   ├── sim/
+│   ├── Punto2_Registro.qpf
+│   ├── Punto2_Registro.qsf
+│   ├── Punto2_Registro.sdc
+│   └── README.md
+├── punto5_ruleta/             # Proyecto integrado: punto 5 + punto 2 en paralelo
+│   ├── src/                   # Código VHDL sintetizable (top, ruleta, display)
+│   ├── sim/                   # Testbenches (ruleta y registro)
+│   ├── legacy/                # Prueba de componentes deshabilitada
 │   ├── Practica1_DLPs.qpf     # Proyecto Quartus
-│   ├── Practica1_DLPs.qsf     # Asignaciones de pines
+│   ├── Practica1_DLPs.qsf     # Asignaciones de pines y fuentes del punto 2
 │   ├── Practica1_DLPs.sdc     # Restricciones de reloj
 │   └── README.md
 ├── plantilla/                 # Base para nuevos puntos
@@ -57,13 +65,23 @@ DLPsPractica1/
 
 # Simular un módulo
 .\scripts\simular.ps1 -Modulo punto5_ruleta -Top tb_Ruleta
+.\scripts\simular.ps1 -Modulo punto5_ruleta -Top tb_Registro
 ```
+
+`simular.ps1` toma las fuentes `VHDL_FILE` del `.qsf` del módulo, además de `src/` y
+`sim/`, así que también compila los módulos externos que instancia el top (por
+ejemplo, el punto 2 dentro del proyecto del punto 5).
 
 ## Módulos
 
 | Punto | Carpeta | Descripción | Estado |
 |---|---|---|---|
-| 5 | [`punto5_ruleta`](punto5_ruleta/README.md) | Ruleta de 8 resultados + prueba de componentes (DIP switch 1, barras de LEDs y 4 pulsadores) | ✅ Implementado |
+| 2 | [`punto2_registro_desplazamiento`](punto2_registro_desplazamiento/README.md) | Registro de desplazamiento de 8 bits con entrada serie, enable y reset por pulsadores | ✅ Implementado e integrado en el proyecto del punto 5 |
+| 5 | [`punto5_ruleta`](punto5_ruleta/README.md) | **Proyecto integrado**: ruleta de 8 resultados + punto 2 en paralelo, con display multiplexado. La prueba de componentes está deshabilitada (`legacy/`) | ✅ Implementado |
+
+> **Diseño que se programa en la placa:** `punto5_ruleta/`, que incluye el punto 5 y
+> el punto 2 funcionando al mismo tiempo. La carpeta del punto 2 se mantiene como
+> proyecto independiente y como fuente del registro que instancia el top integrado.
 
 ## Equipo
 
