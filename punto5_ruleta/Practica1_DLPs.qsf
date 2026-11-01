@@ -56,6 +56,10 @@ set_global_assignment -name VHDL_FILE src/ruleta.vhd
 set_global_assignment -name VHDL_FILE ../punto2_registro_desplazamiento/src/debounce_btn.vhd
 set_global_assignment -name VHDL_FILE ../punto2_registro_desplazamiento/src/registro_desplazamiento.vhd
 set_global_assignment -name VHDL_FILE ../punto2_registro_desplazamiento/src/Punto2_Registro.vhd
+set_global_assignment -name VHDL_FILE src/Contador_P3.vhd
+set_global_assignment -name VHDL_FILE ../punto3_contador/src/contador_ud.vhd
+set_global_assignment -name VHDL_FILE ../punto3_contador/src/div_tick.vhd
+set_global_assignment -name VHDL_FILE ../punto3_contador/src/dec_7seg.vhd
 set_global_assignment -name SDC_FILE Practica1_DLPs.sdc
 set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "3.3-V LVTTL"
 
@@ -74,7 +78,8 @@ set_location_assignment PIN_86 -to seg[5]
 set_location_assignment PIN_79 -to seg[6]
 
 # Seleccion de digitos del display multiplexado (activo alto)
-# dig(0)=digito 3 (ruleta), dig(1)=digito 4 (A), dig(2)=digito 5 (B), dig(3)=digito 6 (C)
+# dig(0)=digito 3 (ruleta), dig(1)=digito 4 (contador P3)
+# dig(2)=digito 5 y dig(3)=digito 6 quedan apagados
 set_location_assignment PIN_113 -to dig[0]
 set_location_assignment PIN_115 -to dig[1]
 set_location_assignment PIN_114 -to dig[2]
@@ -85,9 +90,13 @@ set_location_assignment PIN_3 -to led_n[2]
 set_location_assignment PIN_7 -to led_n[1]
 set_location_assignment PIN_9 -to led_n[0]
 
-# DIP switch 1 (activo alto): bit 0 = dato serie, bit 1 = enable
+# DIP switch 1 (activo alto):
+#   bit 0 = dato serie del punto 2, bit 1 = enable del punto 2
+#   bit 2 = direccion del punto 3, bit 3 = habilitacion del punto 3
 set_location_assignment PIN_120 -to dip1[0]
 set_location_assignment PIN_122 -to dip1[1]
+set_location_assignment PIN_126 -to dip1[2]
+set_location_assignment PIN_132 -to dip1[3]
 
 # Barra de LEDs 1 (activo alto): etapas q(7..0) del registro
 set_location_assignment PIN_121 -to bar1[0]
@@ -107,6 +116,14 @@ set_global_assignment -name CYCLONEII_RESERVE_NCEO_AFTER_CONFIGURATION "USE AS R
 # btn 3 = reloj del registro, btn 4 = reset del registro
 set_location_assignment PIN_100 -to btn3
 set_location_assignment PIN_97 -to btn4
+
+# Pulsadores del punto 3 (activo alto, pull-down)
+# btn 1 = reset del contador, btn 2 = start del contador
+# Los pines 74 y 75 son entradas de reloj/PLL; se usan como I/O normal,
+# igual que en la antigua prueba de componentes. Revisar los warnings del
+# fitter y confirmar en la placa.
+set_location_assignment PIN_74 -to btn1
+set_location_assignment PIN_75 -to btn2
 set_global_assignment -name RESERVE_ALL_UNUSED_PINS "AS INPUT TRI-STATED"
 
 set_global_assignment -name RESERVE_ALL_UNUSED_PINS_NO_OUTPUT_GND "AS INPUT TRI-STATED"

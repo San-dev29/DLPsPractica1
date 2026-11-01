@@ -1,21 +1,26 @@
-# Práctica 1 — Ruleta electrónica + registro de desplazamiento (diseño integrado)
+# Práctica 1 — Ruleta + registro de desplazamiento + contador (diseño integrado)
 
-Circuito en VHDL que integra **dos puntos de la práctica en paralelo**, compartiendo
+Circuito en VHDL que integra **tres puntos de la práctica en paralelo**, compartiendo
 solo el reloj de la placa y el reset de encendido:
 
 1. **Punto 5 — Ruleta** de ocho resultados (1 a 8) en el display de 7 segmentos
    multiplexado. El pulsador de la ruleta inicia y detiene el giro. El dígito 3
-   muestra el valor de la ruleta y los dígitos 4, 5 y 6 muestran **A**, **B** y **C**
-   para comprobar el barrido del display.
-2. **Punto 2 — Registro de desplazamiento de 8 bits**: el DIP switch 1 fija el dato
-   serie y el enable, el pulsador 3 genera el reloj y el pulsador 4 el reset; la
-   barra de LEDs 1 muestra las 8 etapas.
+   muestra el valor de la ruleta.
+2. **Punto 2 — Registro de desplazamiento de 8 bits**: el DIP switch 1 (interruptores
+   1 y 2) fija el dato serie y el enable, el pulsador 3 genera el reloj y el pulsador
+   4 el reset; la barra de LEDs 1 muestra las 8 etapas.
+3. **Punto 3 — Contador binario de 4 bits ascendente/descendente**: el DIP switch 1
+   (interruptores 3 y 4) fija la dirección y la habilitación, el pulsador 1 hace el
+   reset y el pulsador 2 el arranque; el dígito 4 muestra el valor en hexadecimal
+   (`0`–`F`).
 
-La **prueba de componentes quedó deshabilitada** y sus pines se reutilizan para el
-punto 2. Su código se conserva (sin compilarse) en `legacy/`.
+Los dígitos 5 y 6 del display quedan **apagados**: ya no se usan las letras A/B/C.
+
+La **prueba de componentes quedó deshabilitada** y sus pines se reparten entre los
+puntos 2 y 3. Su código se conserva (sin compilarse) en `legacy/`.
 
 El nivel superior `Practica1_DLPs` genera el reset de encendido e instancia
-`ruleta`, `display_mux` y `Punto2_Registro`.
+`ruleta`, `display_mux`, `Punto2_Registro` y `Contador_P3`.
 
 ## 1. Distribución de hardware
 
@@ -35,9 +40,9 @@ Dispositivo: **Cyclone II EP2C5T144C8** (Quartus II 13.0 SP1).
 | `seg[5]` = F | 86 | Display 7 segmentos, segmento F | Salida | Activo alto |
 | `seg[6]` = G | 79 | Display 7 segmentos, segmento G | Salida | Activo alto |
 | `dig[0]` | 113 | Display, dígito 3 | Salida | Ruleta, activo alto |
-| `dig[1]` | 115 | Display, dígito 4 | Salida | Letra A, activo alto |
-| `dig[2]` | 114 | Display, dígito 5 | Salida | Letra B, activo alto |
-| `dig[3]` | 112 | Display, dígito 6 | Salida | Letra C, activo alto |
+| `dig[1]` | 115 | Display, dígito 4 | Salida | Contador P3 (0–F), activo alto |
+| `dig[2]` | 114 | Display, dígito 5 | Salida | **Apagado**, activo alto |
+| `dig[3]` | 112 | Display, dígito 6 | Salida | **Apagado**, activo alto |
 | `led_n[2]` | 3 | LED D2 | Salida | **Activo bajo** |
 | `led_n[1]` | 7 | LED D4 | Salida | **Activo bajo** |
 | `led_n[0]` | 9 | LED D5 | Salida | **Activo bajo** |
@@ -59,22 +64,37 @@ Dispositivo: **Cyclone II EP2C5T144C8** (Quartus II 13.0 SP1).
 | `bar1[6]` | 141 | Barra de LEDs 1, LED 7 | Salida | `q(6)` |
 | `bar1[7]` | 143 | Barra de LEDs 1, LED 8 | Salida | `q(7)` — bit más antiguo |
 
+### Punto 3: DIP switch 1 y pulsadores 1 y 2
+
+| Señal | Pin | Componente físico | Tipo | Función |
+|---|---|---|---|---|
+| `dip1[2]` | 126 | DIP switch 1, interruptor 3 | Entrada | Dirección: 1 = ascendente, 0 = descendente |
+| `dip1[3]` | 132 | DIP switch 1, interruptor 4 | Entrada | Habilitación maestra: 1 = cuenta, 0 = pausa |
+| `btn1` | 74 | Pulsador 1 | Entrada | Reset del contador, activo alto |
+| `btn2` | 75 | Pulsador 2 | Entrada | Start del contador, activo alto |
+| `dig[1]` | 115 | Display, dígito 4 | Salida | Valor del contador `0`–`F` (ver tabla del display) |
+
 Notas:
 - **Pin 73 DEFECTUOSO: no usar.** Aun sin nada conectado entrega 3.3 V (queda fijo
   en alto). No se asigna en el `.qsf`.
 - El **DIP switch 1** y la **barra de LEDs 1** son activos en alto (pull-down /
-  resistencia a GND). Los **pulsadores 3 y 4** también son activos en alto.
+  resistencia a GND). Los **pulsadores 1, 2, 3 y 4** también son activos en alto.
   Si la placa real difiere, ajustar `BTN_ACTIVO_BAJO` en el top.
-- Los pines 74 y 75 (entradas de reloj/PLL) y el 76 (`nCEO`) ya **no se usan**:
-  eran la prueba de componentes. El 76 sigue liberado con
+- Los pines **74 y 75** son entradas de reloj/PLL del EP2C5T144. Se usan como
+  **I/O normal** para los pulsadores 1 y 2 del contador, igual que en la antigua
+  prueba de componentes. El fitter no reportó conflicto, pero deben confirmarse
+  en la placa (ver AGENTS.md, sección 2).
+- El pin 76 (`nCEO`) sigue liberado como I/O normal con
   `CYCLONEII_RESERVE_NCEO_AFTER_CONFIGURATION = USE AS REGULAR IO`.
 - El DIP switch 2 se retiró del diseño: su placa está defectuosa (no la FPGA).
   Sus pines (52–72) ya no se usan.
 - El display es **multiplexado**: se enciende un dígito a la vez, a 1 kHz por
-  dígito (250 Hz por trama). `dig(0)` = pin 113 = dígito 3 (ruleta),
-  `dig(1)` = pin 115 = dígito 4 (A), `dig(2)` = pin 114 = dígito 5 (B) y
-  `dig(3)` = pin 112 = dígito 6 (C). Si el orden físico de los dígitos en la
-  tarjeta es distinto, basta con intercambiar esas asignaciones en el `.qsf`.
+  dígito (500 Hz por trama). `dig(0)` = pin 113 = dígito 3 (ruleta) y
+  `dig(1)` = pin 115 = dígito 4 (contador P3). `dig(2)` = pin 114 (dígito 5) y
+  `dig(3)` = pin 112 (dígito 6) se mantienen en `'0'`; el sintetizador reporta
+  esos dos pines como *stuck at GND*, lo cual es intencional. Si el orden físico
+  de los dígitos en la tarjeta es distinto, basta con intercambiar las
+  asignaciones en el `.qsf`.
 - El punto decimal (DP) del display no se usa.
 - Los LEDs D2/D4/D5 muestran el número de la ruleta en binario invertido. Con 3
   LEDs, el valor **8 se representa como `000`**.
@@ -84,28 +104,23 @@ Notas:
 ## 2. Arquitectura
 
 ```
-                  ┌──────────────────────── Practica1_DLPs (top) ───────────────────────┐
-                  │  reset de encendido (~1 ms) -> rst                                  │
-                  │                                                                     │
- clk ─────────────┼──► u_ruleta : ruleta                                                │
- btn_n ───────────┼──►   div_frecuencia ─► antirrebote ─► control_ruleta ─► lfsr8      │
-                  │        └────────────────────────────────────► BinSieteseg ─► seg_ruleta│
-                  │                                                     └─► led_n        │
-                  │                                                                     │
-                  │   u_display : display_mux  (ruleta, A, B, C) ──► seg y dig           │
-                  │                                                                     │
- dip1[0] ─────────┼──► u_registro : Punto2_Registro ─► bar1                             │
- dip1[1] ─────────┼──►   din / enable                                                  │
- btn3 ────────────┼──►   debounce_btn (reloj) ─► registro_desplazamiento                │
- btn4 ────────────┼──►   debounce_btn (reset)                                          │
-                  └─────────────────────────────────────────────────────────────────────┘
+Practica1_DLPs (top)
+├── reset de encendido (~1 ms) -> rst
+├── u_ruleta : ruleta ───────────────────────────► seg_ruleta, led_n
+├── u_display : display_mux (ruleta, contador) ──► seg, dig
+├── u_registro : Punto2_Registro ────────────────► bar1
+│     dip1[0..1] = din, enable ; btn3 = reloj ; btn4 = reset
+└── u_contador : Contador_P3 ────────────────────► seg_contador
+      dip1[2..3] = dir, ena ; btn1 = reset ; btn2 = start
+      div_tick (2 Hz) ──► tick
 ```
 
 | Archivo | Descripción |
 |---|---|
-| `src/Practica1_DLPs.vhd` | Top: reset de encendido e instancias de ruleta, display y punto 2 |
+| `src/Practica1_DLPs.vhd` | Top: reset de encendido e instancias de los tres puntos y del display |
 | `src/ruleta.vhd` | Punto 5: divisor, antirrebote, control, LFSR y decodificador |
-| `src/display_mux.vhd` | Barrido de los 4 dígitos: ruleta en el dígito 3 y A/B/C en 4–6 |
+| `src/display_mux.vhd` | Barrido de 2 dígitos: ruleta en el dígito 3 y contador en el 4 |
+| `src/Contador_P3.vhd` | Punto 3 integrado: reset/start, sincronización del DIP y decodificador |
 | `src/div_frecuencia.vhd` | Ticks de 1 kHz (antirrebote) y de giro |
 | `src/antirrebote.vhd` | Sincronizador de 2 FF + validación de 20 ms |
 | `src/control_ruleta.vhd` | Biestable T: conmuta RUN/STOP con cada pulsación |
@@ -114,14 +129,19 @@ Notas:
 | `../punto2_registro_desplazamiento/src/Punto2_Registro.vhd` | Punto 2: sincronización del DIP, antirrebotes y registro |
 | `../punto2_registro_desplazamiento/src/debounce_btn.vhd` | Antirrebote genérico con salida `level` y `pulse` |
 | `../punto2_registro_desplazamiento/src/registro_desplazamiento.vhd` | Registro de 8 bits con enable y reset |
+| `../punto3_contador/src/contador_ud.vhd` | Contador de 4 bits ascendente/descendente |
+| `../punto3_contador/src/div_tick.vhd` | Divisor del pulso de conteo (2 Hz por defecto) |
+| `../punto3_contador/src/dec_7seg.vhd` | Decodificador binario → 7 segmentos para `0`–`F` |
 | `sim/tb_Ruleta.vhd` | Testbench de la ruleta y del multiplexado (6 pruebas) |
 | `sim/tb_Registro.vhd` | Testbench del punto 2 integrado (6 pruebas) |
+| `sim/tb_P3.vhd` | Testbench del punto 3 integrado (8 pruebas) |
 | `legacy/prueba_componentes.vhd` | Prueba de componentes **deshabilitada** (no se compila) |
 | `legacy/tb_Componentes.vhd` | Testbench de la prueba de componentes **deshabilitado** |
 | `Practica1_DLPs.sdc` | Restricción de reloj de 50 MHz |
 
-El `.qsf` referencia las fuentes del punto 2 con rutas relativas
-(`../punto2_registro_desplazamiento/src/...`); no hay copias duplicadas.
+El `.qsf` referencia las fuentes de los puntos 2 y 3 con rutas relativas
+(`../punto2_registro_desplazamiento/src/...` y `../punto3_contador/src/...`);
+no hay copias duplicadas.
 
 ### Funcionamiento de la ruleta (punto 5)
 
@@ -131,10 +151,10 @@ El `.qsf` referencia las fuentes del punto 2 con rutas relativas
    números avanzan a 20 Hz.
 3. Segunda pulsación: el LFSR deja de avanzar y el display queda fijo en el número.
 
-El display es multiplexado: `display_mux` recorre los cuatro dígitos a 1 kHz y
-coloca en los segmentos el valor de la ruleta (dígito 3, pin 113) o las letras A, B
-y C (dígitos 4, 5 y 6; pines 115, 114 y 112). La persistencia de la visión hace que
-se vean los cuatro caracteres a la vez.
+El display es multiplexado: `display_mux` recorre los dos dígitos usados a 1 kHz y
+coloca en los segmentos el valor de la ruleta (dígito 3, pin 113) o el del contador
+(dígito 4, pin 115). La persistencia de la visión hace que se vean ambos a la vez;
+los dígitos 5 y 6 (pines 114 y 112) permanecen apagados.
 
 ### Funcionamiento del registro de desplazamiento (punto 2)
 
@@ -159,13 +179,38 @@ Ejemplo: con `din = 1` y `enable = 1`, tras 8 pulsaciones del pulsador 3 la barr
 queda en `0xFF`; si luego se pone `din = 0` y se pulsa 8 veces más, la barra se
 apaga de a un LED por pulsación.
 
+### Funcionamiento del contador (punto 3)
+
+1. **Arranque**: al encender, el reset de encendido borra el contador (`0`) y lo
+   deja **detenido** (`run = 0`). El conteo no comienza solo.
+2. **Start**: cada pulsación del **pulsador 2 (pin 75)** antirrebotada pone
+   `run = 1` y el conteo arranca en el siguiente tick. Una pulsación larga no
+   repite la acción.
+3. **Reset**: con el **pulsador 1 (pin 74)** en alto, el contador se borra a `0` y
+   `run` vuelve a `0` (queda detenido hasta un nuevo start).
+4. **Habilitación**: el **DIP switch 1, interruptor 4 (pin 132)** es la
+   habilitación maestra. Con `0` el conteo se **pausa** conservando el valor; con
+   `1` se reanuda.
+5. **Dirección**: el **DIP switch 1, interruptor 3 (pin 126)** elige
+   `1 = ascendente` (`0,1,…,15,0,…`) o `0 = descendente` (`0,15,14,…,0,15,…`).
+6. **Velocidad**: `div_tick` genera un pulso de **2 Hz** (`TICK_HZ`) que actúa como
+   *clock enable*; el contador se relojiza siempre con los 50 MHz de la placa, no
+   con los pulsadores. El valor cambia cada 0,5 s.
+7. **Display**: el **dígito 4 (pin 115)** muestra el valor en hexadecimal `0`–`F`
+   (11 y 13 como `b` y `d` minúsculas).
+
+Ejemplo: con el interruptor 4 en ON y el 3 en ON, pulsa start (pulsador 2) y el
+dígito 4 recorre `0,1,2,…`; pon el interruptor 4 en OFF para congelar el valor y
+vuelve a ON para continuar. Pulsa reset (pulsador 1) para volver a `0`.
+
 ### Prueba de componentes (deshabilitada)
 
 `legacy/prueba_componentes.vhd` conectaba el DIP switch 1 a la barra 1 y los
-pulsadores 1–4 a la barra 2. Ya **no se compila** ni se instancia: sus pines
-(pulsadores 1 y 2 y la barra 2) quedaron libres y el DIP switch 1 y la barra 1 se
-reutilizan para el punto 2. El archivo se conserva solo como referencia histórica;
-para volver a usarlo habría que restaurar sus asignaciones de pines en el `.qsf`.
+pulsadores 1–4 a la barra 2. Ya **no se compila** ni se instancia: el **DIP switch
+1** y la **barra 1** se reutilizan para el punto 2; los **pulsadores 1 y 2** para
+el punto 3 y los **pulsadores 3 y 4** para el punto 2. La barra 2 queda libre. El
+archivo se conserva solo como referencia histórica; para volver a usarlo habría
+que restaurar sus asignaciones de pines en el `.qsf`.
 
 ## 3. Resultados de simulación (ModelSim)
 
@@ -178,7 +223,7 @@ para volver a usarlo habría que restaurar sus asignaciones de pines en el `.qsf
 | T3 | Segunda pulsación detiene y congela | OK — detenida en 1 |
 | T4 | Rebotes de 2 ms no generan pulsos | OK — después arranca con pulsación limpia |
 | T5 | Cobertura del LFSR | OK — aparecen los 8 valores (1..8) |
-| T6 | Multiplexado del display | OK — ruleta en dígito 3 y A/B/C en dígitos 4–6 |
+| T6 | Multiplexado del display | OK — ruleta en dígito 3, contador en 0 en el dígito 4 y dígitos 5–6 apagados |
 
 `tb_Registro` (punto 2 dentro del top integrado):
 
@@ -191,39 +236,56 @@ para volver a usarlo habría que restaurar sus asignaciones de pines en el `.qsf
 | T5 | Reset limpia un registro con datos | OK |
 | T6 | Una pulsación larga del pulsador 3 = un solo desplazamiento | OK |
 
+`tb_P3` (punto 3 dentro del top integrado; tick acelerado a 20 Hz):
+
+| Prueba | Descripción | Resultado |
+|---|---|---|
+| T1 | Estado inicial: contador en 0 y detenido; dígitos 5–6 apagados | OK |
+| T2 | Start arranca el conteo ascendente (0 → 1 → 2) | OK |
+| T3 | DIP de habilitación en 0 pausa el conteo | OK |
+| T4 | Al reanudar continúa desde el valor pausado | OK |
+| T5 | Dirección descendente al cambiar el DIP | OK |
+| T6 | Reset borra y detiene el contador | OK |
+| T7 | Start descendente desde 0 desborda a F (15) | OK |
+| T8 | Reset + start ascendente; dígitos 5 y 6 apagados y ruleta en el dígito 3 | OK |
+
 ## 4. Resultados de síntesis
 
 ```
-Total logic elements   : 200 / 4,608 ( 4 % )
-Total registers        : 139
-Total pins             :  28 / 89  (31 %)
-Worst-case setup slack : 13.966 ns   (positivo, reloj de 50 MHz)
+Total logic elements   : 281 / 4,608 ( 6 % )
+Total registers        : 188
+Total pins             :  32 / 89  (36 %)
+Worst-case setup slack : 13.349 ns   (positivo, reloj de 50 MHz)
 Worst-case hold slack  :  0.499 ns   (positivo)
-Full Compilation       : 0 errors, 7 warnings (ninguno de pines)
+Full Compilation       : 0 errors, 10 warnings
 ```
 
 Los warnings son informativos: compilación en paralelo sin licencia, LogicLock sin
 licencia, jitter no soportado por Cyclone II, falta de capacitancia de carga en las
-salidas y restricciones de setup/hold no exhaustivas. No hay conflictos de pines
-dedicados.
+salidas, restricciones de setup/hold no exhaustivas y `dig[2]`/`dig[3]` *stuck at
+GND* (intencional: los dígitos 5 y 6 quedan apagados). No hay conflictos de pines
+dedicados; los pines 74 y 75 se usan como I/O normal sin advertencia del fitter,
+pero deben confirmarse en la placa.
 
 ## 5. Cómo reproducir
 
 ```
 punto5_ruleta/
-├── src/                      # VHDL sintetizable de los puntos 5 y top
+├── src/                      # VHDL sintetizable de los puntos 5 y 3, y top
 │   ├── Practica1_DLPs.vhd    # Top integrado
+│   ├── Contador_P3.vhd       # Envoltorio integrado del punto 3
 │   ├── ruleta.vhd
 │   ├── display_mux.vhd
 │   └── ...
 ├── sim/
 │   ├── tb_Ruleta.vhd
-│   └── tb_Registro.vhd
+│   ├── tb_Registro.vhd
+│   └── tb_P3.vhd
 ├── legacy/                   # Prueba de componentes deshabilitada
 │   ├── prueba_componentes.vhd
 │   └── tb_Componentes.vhd
 ├── Practica1_DLPs.qpf        # Proyecto Quartus
-├── Practica1_DLPs.qsf        # Pines y fuentes (incluye ../punto2.../src)
+├── Practica1_DLPs.qsf        # Pines y fuentes (incluye ../punto2... y ../punto3...)
 └── Practica1_DLPs.sdc        # Restricción de reloj
 ```
 
@@ -238,10 +300,13 @@ Desde la raíz del repositorio:
 
 # Simulación del punto 2 integrado
 .\scripts\simular.ps1 -Modulo punto5_ruleta -Top tb_Registro
+
+# Simulación del punto 3 integrado
+.\scripts\simular.ps1 -Modulo punto5_ruleta -Top tb_P3
 ```
 
 `simular.ps1` lee las entradas `VHDL_FILE` del `.qsf` del módulo, por lo que compila
-también las fuentes externas del punto 2 además de `src/` y `sim/`.
+también las fuentes externas de los puntos 2 y 3 además de `src/` y `sim/`.
 
 También se puede hacer manualmente desde esta carpeta:
 
@@ -249,9 +314,12 @@ También se puede hacer manualmente desde esta carpeta:
 & "D:\Programas\Quartus ii\quartus\bin64\quartus_sh.exe" --flow compile Practica1_DLPs
 
 vlib work
-vcom -93 src/*.vhd sim/*.vhd ../punto2_registro_desplazamiento/src/*.vhd
+vcom -93 src/*.vhd sim/*.vhd ../punto2_registro_desplazamiento/src/*.vhd `
+          ../punto3_contador/src/*.vhd
 vsim -c -do "run -all; quit -f" tb_Ruleta
 ```
 
 Para simular más rápido, los testbenches usan `CLK_HZ = 10_000`, manteniendo los
-tiempos reales de antirrebote y de giro.
+tiempos reales de antirrebote y de giro. `tb_P3` usa `TICK_HZ = 20` (50 ms por
+cuenta) para que cada valor sea observable sin ambigüedad con el display
+multiplexado.

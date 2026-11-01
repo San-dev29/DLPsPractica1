@@ -6,10 +6,10 @@ use ieee.numeric_std.all;
 -- Se reduce CLK_HZ para que la simulacion sea rapida, manteniendo
 -- los tiempos reales de antirrebote (20 ms) y de giro (20 Hz).
 --
--- El display ahora es multiplexado: el valor de la ruleta solo esta
--- presente en los segmentos cuando dig(0)='1'. El testbench captura ese
--- valor en seg_ruleta y comprueba ademas las letras A, B y C de los otros
--- tres digitos.
+-- El display es multiplexado: el valor de la ruleta solo esta presente en
+-- los segmentos cuando dig(0)='1'. El testbench captura ese valor en
+-- seg_ruleta y comprueba ademas que el digito 4 muestra el contador (0 en
+-- reposo) y que los digitos 5 y 6 quedan apagados.
 entity tb_Ruleta is
 end tb_Ruleta;
 
@@ -28,8 +28,10 @@ architecture sim of tb_Ruleta is
     -- Valor de la ruleta capturado cuando esta activo su digito
     signal seg_ruleta : std_logic_vector(6 downto 0) := (others => '0');
 
-    -- Entradas/salidas del punto 2 (sin usar aqui)
-    signal dip1  : std_logic_vector(1 downto 0) := "00";
+    -- Entradas/salidas de los puntos 2 y 3 (sin usar aqui)
+    signal dip1  : std_logic_vector(3 downto 0) := "0000";
+    signal btn1  : std_logic := '0';   -- Reset del contador P3
+    signal btn2  : std_logic := '0';   -- Start del contador P3
     signal btn3  : std_logic := '0';
     signal btn4  : std_logic := '0';
     signal bar1  : std_logic_vector(7 downto 0);
@@ -72,6 +74,7 @@ begin
             DB_MS           => 20,
             SPIN_HZ         => 20,
             DIGIT_HZ        => 1000,
+            TICK_HZ         => 2,
             BTN_ACTIVO_BAJO => false
         )
         port map (
@@ -81,6 +84,8 @@ begin
             dig   => dig,
             led_n => led_n,
             dip1  => dip1,
+            btn1  => btn1,
+            btn2  => btn2,
             btn3  => btn3,
             btn4  => btn4,
             bar1  => bar1
@@ -193,25 +198,21 @@ begin
             severity note;
 
         ---------------------------------------------------------------
-        -- PRUEBA 6: multiplexado del display (A, B, C y ruleta)
+        -- PRUEBA 6: multiplexado del display (ruleta y contador)
         ---------------------------------------------------------------
-        wait until dig = "0010";     -- Digito 4: letra A
+        wait until dig = "0010";     -- Digito 4: contador P3 en reposo
         wait for 1 us;
-        assert seg = "1110111"
-            report "FALLO T6: el digito 4 no muestra la letra A"
+        assert seg = "0111111"       -- 0
+            report "FALLO T6: el digito 4 no muestra el contador en 0"
             severity error;
 
-        wait until dig = "0100";     -- Digito 5: letra B
-        wait for 1 us;
-        assert seg = "1111100"
-            report "FALLO T6: el digito 5 no muestra la letra B"
-            severity error;
-
-        wait until dig = "1000";     -- Digito 6: letra C
-        wait for 1 us;
-        assert seg = "0111001"
-            report "FALLO T6: el digito 6 no muestra la letra C"
-            severity error;
+        -- Los digitos 5 y 6 ya no se usan: deben permanecer apagados
+        for i in 1 to 10 loop
+            wait for 1 ms;
+            assert dig(3 downto 2) = "00"
+                report "FALLO T6: se habilito un digito apagado (5 o 6)"
+                severity error;
+        end loop;
 
         wait until dig = "0001";     -- Digito 3: valor de la ruleta
         wait for 1 us;
@@ -219,7 +220,7 @@ begin
         assert (n >= 1) and (n <= 8)
             report "FALLO T6: el digito de la ruleta no muestra un valor 1..8"
             severity error;
-        report "T6 OK: multiplexado correcto (ruleta, A, B y C)"
+        report "T6 OK: multiplexado correcto (ruleta y contador; digitos 5 y 6 apagados)"
             severity note;
 
         ---------------------------------------------------------------

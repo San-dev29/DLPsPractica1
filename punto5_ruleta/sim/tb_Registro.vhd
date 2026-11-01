@@ -10,7 +10,8 @@ use ieee.std_logic_1164.all;
 --   * btn 4 (pin 97)      -> reset antirrebotado
 --   * barra de LEDs 1     -> q(7..0)
 --
--- La ruleta se mantiene detenida (btn_n='1') para no interferir.
+-- La ruleta se mantiene detenida (btn_n='1') y el contador del punto 3 se
+-- mantiene apagado (dip1(3)='0' y sin pulsar start) para no interferir.
 entity tb_Registro is
 end tb_Registro;
 
@@ -25,7 +26,9 @@ architecture sim of tb_Registro is
     signal dig   : std_logic_vector(3 downto 0);
     signal led_n : std_logic_vector(2 downto 0);
 
-    signal dip1 : std_logic_vector(1 downto 0) := "00";
+    signal dip1 : std_logic_vector(3 downto 0) := "0000";
+    signal btn1 : std_logic := '0';   -- Reset del contador P3 (sin usar)
+    signal btn2 : std_logic := '0';   -- Start del contador P3 (sin usar)
     signal btn3 : std_logic := '0';
     signal btn4 : std_logic := '0';
     signal bar1 : std_logic_vector(7 downto 0);
@@ -42,6 +45,7 @@ begin
             DB_MS           => 5,
             SPIN_HZ         => 20,
             DIGIT_HZ        => 1000,
+            TICK_HZ         => 2,
             BTN_ACTIVO_BAJO => false
         )
         port map (
@@ -51,6 +55,8 @@ begin
             dig   => dig,
             led_n => led_n,
             dip1  => dip1,
+            btn1  => btn1,
+            btn2  => btn2,
             btn3  => btn3,
             btn4  => btn4,
             bar1  => bar1

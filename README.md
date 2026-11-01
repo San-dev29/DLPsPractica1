@@ -21,12 +21,19 @@ DLPsPractica1/
 │   ├── Punto2_Registro.qsf
 │   ├── Punto2_Registro.sdc
 │   └── README.md
-├── punto5_ruleta/             # Proyecto integrado: punto 5 + punto 2 en paralelo
-│   ├── src/                   # Código VHDL sintetizable (top, ruleta, display)
-│   ├── sim/                   # Testbenches (ruleta y registro)
+├── punto3_contador/           # Punto 3: contador binario de 4 bits up/down
+│   ├── src/                   # Top, contador, divisor y decodificador 7 segmentos
+│   ├── sim/
+│   ├── Punto3_Contador.qpf
+│   ├── Punto3_Contador.qsf
+│   ├── Punto3_Contador.sdc
+│   └── README.md
+├── punto5_ruleta/             # Proyecto integrado: puntos 5 + 2 + 3 en paralelo
+│   ├── src/                   # Código VHDL sintetizable (top, ruleta, display, P3)
+│   ├── sim/                   # Testbenches (ruleta, registro y contador)
 │   ├── legacy/                # Prueba de componentes deshabilitada
 │   ├── Practica1_DLPs.qpf     # Proyecto Quartus
-│   ├── Practica1_DLPs.qsf     # Asignaciones de pines y fuentes del punto 2
+│   ├── Practica1_DLPs.qsf     # Pines y fuentes de los puntos 2 y 3
 │   ├── Practica1_DLPs.sdc     # Restricciones de reloj
 │   └── README.md
 ├── plantilla/                 # Base para nuevos puntos
@@ -61,27 +68,33 @@ DLPsPractica1/
 
 ```powershell
 # Compilar un módulo
+.\scripts\compilar.ps1 -Modulo punto3_contador
 .\scripts\compilar.ps1 -Modulo punto5_ruleta
 
 # Simular un módulo
+.\scripts\simular.ps1 -Modulo punto3_contador -Top tb_Contador
 .\scripts\simular.ps1 -Modulo punto5_ruleta -Top tb_Ruleta
 .\scripts\simular.ps1 -Modulo punto5_ruleta -Top tb_Registro
+.\scripts\simular.ps1 -Modulo punto5_ruleta -Top tb_P3
 ```
 
 `simular.ps1` toma las fuentes `VHDL_FILE` del `.qsf` del módulo, además de `src/` y
 `sim/`, así que también compila los módulos externos que instancia el top (por
-ejemplo, el punto 2 dentro del proyecto del punto 5).
+ejemplo, los puntos 2 y 3 dentro del proyecto del punto 5).
 
 ## Módulos
 
 | Punto | Carpeta | Descripción | Estado |
 |---|---|---|---|
 | 2 | [`punto2_registro_desplazamiento`](punto2_registro_desplazamiento/README.md) | Registro de desplazamiento de 8 bits con entrada serie, enable y reset por pulsadores | ✅ Implementado e integrado en el proyecto del punto 5 |
-| 5 | [`punto5_ruleta`](punto5_ruleta/README.md) | **Proyecto integrado**: ruleta de 8 resultados + punto 2 en paralelo, con display multiplexado. La prueba de componentes está deshabilitada (`legacy/`) | ✅ Implementado |
+| 3 | [`punto3_contador`](punto3_contador/README.md) | Contador binario de 4 bits ascendente/descendente, dirección y habilitación por DIP switch, reset/start por pulsadores y salida 0–F al display | ✅ Implementado e integrado en el proyecto del punto 5 |
+| 5 | [`punto5_ruleta`](punto5_ruleta/README.md) | **Proyecto integrado**: ruleta de 8 resultados + registro de desplazamiento + contador, con display multiplexado (dígitos 3 y 4). La prueba de componentes está deshabilitada (`legacy/`) | ✅ Implementado |
 
-> **Diseño que se programa en la placa:** `punto5_ruleta/`, que incluye el punto 5 y
-> el punto 2 funcionando al mismo tiempo. La carpeta del punto 2 se mantiene como
-> proyecto independiente y como fuente del registro que instancia el top integrado.
+> **Diseño que se programa en la placa:** `punto5_ruleta/`, que incluye los puntos 5,
+> 2 y 3 funcionando al mismo tiempo: la ruleta en el dígito 3, el contador en el
+> dígito 4 y el registro en la barra de LEDs 1. Las carpetas de los puntos 2 y 3 se
+> mantienen como proyectos independientes y como fuente de los módulos que instancia
+> el top integrado (rutas relativas en el `.qsf`).
 
 ## Equipo
 

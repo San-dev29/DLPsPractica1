@@ -1,0 +1,71 @@
+# -------------------------------------------------------------------------- #
+#
+# Copyright (C) 1991-2013 Altera Corporation
+# Your use of Altera Corporation's design tools, logic functions 
+# and other software and tools, and its AMPP partner logic 
+# functions, and any output files from any of the foregoing 
+# (including device programming or simulation files), and any 
+# associated documentation or information are expressly subject 
+# to the terms and conditions of the Altera Program License 
+# Subscription Agreement, Altera MegaCore Function License 
+# Agreement, or any other applicable license agreement, including, 
+# without limitation, that your use is for the sole purpose of 
+# programming logic devices manufactured by Altera and sold by 
+# Altera or its authorized distributors.  Please refer to the 
+# applicable agreement for further details.
+#
+# -------------------------------------------------------------------------- #
+#
+# Quartus II 64-Bit
+# Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
+# Date created = 12:00:00  October 30, 2026
+#
+# -------------------------------------------------------------------------- #
+
+set_global_assignment -name FAMILY "Cyclone II"
+set_global_assignment -name DEVICE EP2C5T144C8
+set_global_assignment -name TOP_LEVEL_ENTITY Punto3_Contador
+set_global_assignment -name ORIGINAL_QUARTUS_VERSION "13.0 SP1"
+set_global_assignment -name PROJECT_CREATION_TIME_DATE "12:00:00  OCTOBER 30, 2026"
+set_global_assignment -name LAST_QUARTUS_VERSION "13.0 SP1"
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
+set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
+set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
+set_global_assignment -name ERROR_CHECK_FREQUENCY_DIVISOR 1
+set_global_assignment -name VHDL_FILE src/Punto3_Contador.vhd
+set_global_assignment -name VHDL_FILE src/contador_ud.vhd
+set_global_assignment -name VHDL_FILE src/div_tick.vhd
+set_global_assignment -name VHDL_FILE src/dec_7seg.vhd
+set_global_assignment -name VHDL_FILE ../punto2_registro_desplazamiento/src/debounce_btn.vhd
+set_global_assignment -name SDC_FILE Punto3_Contador.sdc
+set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "3.3-V LVTTL"
+
+# Reloj de la placa (50 MHz)
+set_location_assignment PIN_17 -to clk
+
+# Pulsador de reset (pull-up, activo bajo)
+set_location_assignment PIN_144 -to rst_n
+
+# DIP switch 1 (activo alto): int. 3 = direccion, int. 4 = habilitacion
+set_location_assignment PIN_126 -to dir
+set_location_assignment PIN_132 -to hab
+
+# Display de 7 segmentos: seg(0)=A ... seg(6)=G (activo alto)
+set_location_assignment PIN_96 -to seg[0]
+set_location_assignment PIN_94 -to seg[1]
+set_location_assignment PIN_93 -to seg[2]
+set_location_assignment PIN_92 -to seg[3]
+set_location_assignment PIN_87 -to seg[4]
+set_location_assignment PIN_86 -to seg[5]
+set_location_assignment PIN_79 -to seg[6]
+
+# Digito 3 del display (activo alto). El display es multiplexado y este
+# diseno usa un solo digito, que queda habilitado permanentemente.
+set_location_assignment PIN_113 -to digito
+
+# El pin 76 es LVDS41p/nCEO (doble proposito). Se deja liberado como I/O
+# normal por si se reutiliza; sin esto el fitter lo reserva como nCEO.
+set_global_assignment -name CYCLONEII_RESERVE_NCEO_AFTER_CONFIGURATION "USE AS REGULAR IO"
+
+set_global_assignment -name RESERVE_ALL_UNUSED_PINS "AS INPUT TRI-STATED"
+set_global_assignment -name RESERVE_ALL_UNUSED_PINS_NO_OUTPUT_GND "AS INPUT TRI-STATED"
